@@ -1,0 +1,22 @@
+#!/bin/sh
+
+#grep "Centre of mass" $1 | cut -d ":" -f 2 | cut -d " " -f 4 | tr -d ")" > cM
+#grep "Linear velocity" $1 | cut -d ":" -f 2 | cut -d " " -f 4 | tr -d ")" > lV
+#grep "Angular velocity" $1 | cut -d ":" -f 2 | cut -d " " -f 4 | tr -d ")" > aV
+#grep -e "^Time = " $1 | cut -d " " -f 3 > times
+
+grep "Centre of mass"   $1  | cut -d ":" -f 2 | tr -d "()" > cM
+grep "Linear velocity"  $1  | cut -d ":" -f 2 | tr -d "()" > lV
+grep "Angular velocity" $1  | cut -d ":" -f 2 | tr -d "()" > aV
+grep "Orientation"  $1  | cut -d ":" -f 2 | tr -d "()" > orientation
+grep -e "^Time = " $1 | cut -d " " -f 3 > times
+
+
+paste times cM > t_vs_cm
+paste times lV > t_vs_lv
+paste times aV > t_vs_av
+paste times orientation > t_vs_orientation
+
+rm cM lV orientation aV times
+
+#------------------------------------------------------------------------------

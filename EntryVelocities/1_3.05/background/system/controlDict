@@ -1,0 +1,124 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1912                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+libs            (overset fvMotionSolvers);
+
+application     overInterDyMFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.01;
+
+deltaT          2.5e-5;//时间步收敛性分析
+
+writeControl    runTime;
+
+writeInterval   0.002;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  12;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   10;
+
+runTimeModifiable yes;
+
+adjustTimeStep  no;
+
+maxCo     1;
+
+maxAlphaCo  0.5;
+maxDeltaT   0.1;
+
+functions
+{
+    yPlus
+    {   
+        type            yPlus;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    writeTime;
+    }  
+ //垂向力
+    forces
+    {
+        type            forces;
+        libs            (forces);
+        patches         (floatingObject);
+        rhoInf          1000;
+        log             on;
+        writeControl    timeStep;
+        writeInterval   1;
+        CofR            (0 0 0.12);
+    }
+    
+   minmaxdomain
+   {
+       type fieldMinMax;
+   
+       libs ("libfieldFunctionObjects.so");
+   
+       enabled true;
+   
+       mode component;
+   
+       writeControl timeStep;
+       writeInterval 1;
+   
+       log true;
+   
+       fields (p_rgh U alpha.water);
+   }
+   patchProbes
+   {
+    type            patchProbes;
+    libs            ( "libsampling.so" );
+ 
+    name            patchProbes;
+ 
+    patches         ("floatingObject");
+ 
+   writeControl    timeStep;
+   writeInterval   1;
+ 
+   interpolationScheme cellPoint;
+ 
+   fields          (p_rgh p);
+ 
+   fixedLocations  false;
+ 
+   probeLocations
+   (
+   (0 0 0.02)//point1
+   (-0.025 0 0.02)//point2
+   (0.025 0 0.02)//point3   
+   (-0.025 0 0.12)//point4
+   (0.025 0 0.12)//point5
+   (0 0 0.22)//point6      
+   );    
+   }
+}
+
+// ************************************************************************* //
