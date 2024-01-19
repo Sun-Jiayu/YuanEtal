@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1912                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 3.49e-2;
+
+boundaryField
+{
+    #includeEtc "caseDicts/setConstraintTypes"//为基类型提供自动的边界条件，oversetPatch和sides
+    
+   inlet
+   {
+        type            fixedValue;
+        value           $internalField;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      $internalField;
+        value           $internalField;
+    }
+    stationaryWalls
+    {        
+         type            fixedValue;
+         value           $internalField;
+    }
+    bottom
+    {        
+         type            fixedValue;
+         value           $internalField;
+    }
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      $internalField;
+        value           $internalField;
+    }
+    floatingObject
+    {
+        type            kqRWallFunction;//使用y+不敏感的壁面函数(1< y+ <300)
+        value           $internalField;
+    }
+}
+
+// ************************************************************************* //
