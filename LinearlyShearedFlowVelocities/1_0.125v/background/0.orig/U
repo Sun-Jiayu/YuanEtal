@@ -1,0 +1,198 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1912                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   #codeStream
+{
+    codeInclude
+    #{
+        #include "fvCFD.H"
+    #};
+
+    codeOptions
+    #{
+        -I$(LIB_SRC)/finiteVolume/lnInclude \
+        -I$(LIB_SRC)/meshTools/lnInclude
+    #};
+
+    codeLibs
+    #{
+        -lmeshTools \
+		-lfiniteVolume
+    #};
+
+    code
+    #{
+        const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+        const fvMesh& mesh = refCast<const fvMesh>(d.db());
+        vectorField U(mesh.nCells(), vector(0, 0, 0));
+
+        forAll(U, i)
+        {
+            const scalar z 	= mesh.C()[i][2];
+            const scalar depth 	= 1.4;		//水深
+            const scalar U0 	= -0.7625;	//风速和最上层流速
+            const scalar slope 	= U0/depth;	//变化率
+		
+            U[i] = vector(U0, 0., 0.);
+
+            if (z <= 0)
+            {
+                U[i] = vector(U0+z*slope, 0, 0.);
+            }
+        }
+
+        U.writeEntry("",os);
+    #};
+};
+
+boundaryField
+{
+    #includeEtc "caseDicts/setConstraintTypes"//为基类型提供自动的边界条件，oversetPatch和sides
+    
+    inlet
+        {
+            type            fixedValue;
+            value           #codeStream
+            {
+                codeInclude
+                #{
+                    #include "fvCFD.H"
+                #};
+    
+                codeOptions
+                #{
+                    -I$(LIB_SRC)/finiteVolume/lnInclude \
+                    -I$(LIB_SRC)/meshTools/lnInclude
+                #};
+    
+        	    //libs needed to visualize BC in paraview
+        	    codeLibs
+        	    #{
+            	-lmeshTools \
+            	-lfiniteVolume
+        	    #};
+    
+                code
+                #{
+                    const IOdictionary& d = static_cast<const IOdictionary&>(dict.parent().parent());
+                    const fvMesh& mesh = refCast<const fvMesh>(d.db());
+                    const label id = mesh.boundary().findPatchID("inlet");
+                    const fvPatch& patch = mesh.boundary()[id];
+    
+                    //vectorField U(mesh.boundary()[id].size(), vector(0, 0, 0));
+                    vectorField U(patch.size(), vector(0, 0, 0));
+    
+                    forAll(U, i)
+                    {
+                        const scalar z = patch.Cf()[i][2];
+                        const scalar depth 	= 1.4;		//水深
+                        const scalar U0 	= -0.7625;	//风速和最上层流速
+                        const scalar slope 	= U0/depth;	//变化率
+    
+                        U[i] = vector(U0, 0., 0.);
+    
+                        if (z <= 0)
+                        {
+                            U[i] = vector(U0+z*slope, 0, 0.);
+                        }
+                    }
+    
+                    U.writeEntry("", os);
+                #};
+            };
+    }
+    
+    outlet
+    {
+
+        type            inletOutlet;
+        inletValue      #codeStream
+            {
+                codeInclude
+                #{
+                    #include "fvCFD.H"
+                #};
+    
+                codeOptions
+                #{
+                    -I$(LIB_SRC)/finiteVolume/lnInclude \
+                    -I$(LIB_SRC)/meshTools/lnInclude
+                #};
+    
+        	    //libs needed to visualize BC in paraview
+        	    codeLibs
+        	    #{
+            	-lmeshTools \
+            	-lfiniteVolume
+        	    #};
+    
+                code
+                #{
+                    const IOdictionary& d = static_cast<const IOdictionary&>(dict.parent().parent());
+                    const fvMesh& mesh = refCast<const fvMesh>(d.db());
+                    const label id = mesh.boundary().findPatchID("outlet");
+                    const fvPatch& patch = mesh.boundary()[id];
+    
+                    //vectorField U(mesh.boundary()[id].size(), vector(0, 0, 0));
+                    vectorField U(patch.size(), vector(0, 0, 0));
+    
+                    forAll(U, i)
+                    {
+                        const scalar z = patch.Cf()[i][2];
+                        const scalar depth 	= 1.4;		//水深
+                        const scalar U0 	= -0.7625;	//风速和最上层流速
+                        const scalar slope 	= U0/depth;	//变化率
+    
+                        U[i] = vector(U0, 0., 0.);
+    
+                        if (z <= 0)
+                        {
+                            U[i] = vector(U0+z*slope, 0, 0.);
+                        }
+                    }
+    
+                    U.writeEntry("", os);
+                #};
+            };
+        value           uniform (0 0 0);
+    }
+    
+    stationaryWalls
+    {
+        type            slip;
+    }
+    
+    bottom
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+    
+    atmosphere
+    {
+        type            zeroGradient;
+    }
+    
+    floatingObject
+    {
+        type            movingWallVelocity;
+        value           uniform (0 0 0);
+    }
+}
+
+// ************************************************************************* //
